@@ -23,7 +23,7 @@ function reloadRss() {
 
 function createMessage(messageText) {
   if(MAINTENANCE)
-    return 'メンテナンス中です。\n情報については、@nagahiro0918 (https://twitter.com/nagahiro0918)をご参照ください。';
+    return 'メンテナンス中です。\nメンテナンス情報については、@nagahiro0918 (https://twitter.com/nagahiro0918)をご参照ください。';
   
   if(typeof messageText !== 'undefined') {
     // イースターエッグ
@@ -71,8 +71,8 @@ function doPost(e) {
   } catch(error) {
     logToSheet(STATUS.FAILED, event, error.message);
     // エラーが出た場合は、一応その旨を送信しようとしてみる
-    var postData = createPostData(event.replyToken, ERROR_MESSAGE);
-    UrlFetchApp.fetch('https://api.line.me/v2/bot/message/reply', createOptions(postData));
+//    var postData = createPostData(event.replyToken, ERROR_MESSAGE);
+//    UrlFetchApp.fetch('https://api.line.me/v2/bot/message/reply', createOptions(postData));
   }
 }
 
