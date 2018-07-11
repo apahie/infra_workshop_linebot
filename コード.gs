@@ -34,7 +34,7 @@ function createMessage(messageText) {
     if(messageText.indexOf('IE') === 0)
       return 'イエ' + Array(messageText.split('E').length).join('ー') + '！！';
     if(messageText.indexOf('ひかりあれ') !== -1)
-      return 'ひかりあれ。';
+      return 'インフラ勉強会にひかりあれ。';
   }
 
   // 本処理
