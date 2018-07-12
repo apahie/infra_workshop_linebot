@@ -25,17 +25,16 @@ function createMessage(messageText) {
   if(MAINTENANCE)
     return 'メンテナンス中です。\nメンテナンス情報については、@nagahiro0918 (https://twitter.com/nagahiro0918)をご参照ください。';
   
-  if(typeof messageText !== 'undefined') {
-    // イースターエッグ
-    if(messageText.indexOf('ぬるぽ') !== -1)
-      return 'ｶﾞｯ';
-    if(messageText.indexOf('禊') !== -1)
-      return "( っ'-')╮ =͟͟͞͞💩";
-    if(messageText.indexOf('IE') === 0)
-      return 'イエ' + Array(messageText.split('E').length).join('ー') + '！！';
-    if(messageText.indexOf('ひかりあれ') !== -1)
-      return 'ひかりあれ。';
-  }
+  var messageText = typeof errorMessage === 'undefined' ? '': errorMessage;
+  // イースターエッグ
+  if(messageText.indexOf('ぬるぽ') !== -1)
+    return 'ｶﾞｯ';
+  if(messageText.indexOf('禊') !== -1)
+    return "( っ'-')╮ =͟͟͞͞💩";
+  if(messageText.indexOf('IE') === 0)
+    return 'イエ' + Array(messageText.split('E').length).join('ー') + '！！';
+  if(messageText.indexOf('ひかりあれ') !== -1)
+    return 'インフラ勉強会にひかりあれ。';
 
   // 本処理
   outlines = spreadsheet.getSheetByName(SHEET.EVENT).getRange('A2:A11').getValues();
@@ -63,6 +62,28 @@ function pushMessage() {
 
 function doPost(e) {
   var event = JSON.parse(e.postData.contents).events[0];
+  // 基本的に友だち追加、解除の場合を想定
+  if(event.type !== 'message') {
+    var status;
+    var message;
+    switch(event.type) {
+      case 'follow':
+        status = STATUS.SUCCESS;
+        message = '友だち追加';
+        break;
+      case 'unfollow':
+        status = STATUS.SUCCESS;
+        message = '友だち解除';
+        break;
+      default:
+        status = STATUS.FAILED;
+        message = 'その他';
+        break;
+    }
+    logToSheet(status, event, message);
+    return;
+  }
+  
   try {
     var postData = createPostData(event.replyToken, createMessage(event.message.text));
     UrlFetchApp.fetch('https://api.line.me/v2/bot/message/reply', createOptions(postData));
@@ -71,8 +92,8 @@ function doPost(e) {
   } catch(error) {
     logToSheet(STATUS.FAILED, event, error.message);
     // エラーが出た場合は、一応その旨を送信しようとしてみる
-//    var postData = createPostData(event.replyToken, ERROR_MESSAGE);
-//    UrlFetchApp.fetch('https://api.line.me/v2/bot/message/reply', createOptions(postData));
+    var postData = createPostData(event.replyToken, ERROR_MESSAGE);
+    UrlFetchApp.fetch('https://api.line.me/v2/bot/message/reply', createOptions(postData));
   }
 }
 
@@ -99,7 +120,7 @@ function createOptions(postData) {
   return options;
 }
 
-function logToSheet(status, eventLog, errorMessage) {
-  var errorMessage = typeof errorMessage === 'undefined' ? '': errorMessage;
-  spreadsheet.getSheetByName(SHEET.LOG).appendRow([new Date(), status, eventLog, errorMessage]);
+function logToSheet(status, eventLog, message) {
+  var message = typeof message === 'undefined' ? '': message;
+  spreadsheet.getSheetByName(SHEET.LOG).appendRow([new Date(), status, eventLog, message]);
 }
