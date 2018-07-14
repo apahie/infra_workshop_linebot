@@ -154,12 +154,6 @@ function omit(text, charLimit) {
   
 }
 
-function test() {
-  eventDatas = spreadsheet.getSheetByName(SHEET.EVENT).getRange('A2:M11').getValues();
-  Logger.log(eventDatas[0][4]);
-  Logger.log(eventDatas[0][12]);
-}
-
 function logToSheet(status, eventLog, message) {
   var message = typeof message === 'undefined' ? '': message;
   spreadsheet.getSheetByName(SHEET.LOG).appendRow([new Date(), status, eventLog, message]);
