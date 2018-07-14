@@ -80,7 +80,7 @@ function doPost(e) {
   
   try {
     var postData = createPostData(event.replyToken, event);
-    UrlFetchApp.fetch('https://api.line.me/v2/bot/message/reply', createsOptions(postData));
+    UrlFetchApp.fetch('https://api.line.me/v2/bot/message/reply', createOptions(postData));
 
     logToSheet(STATUS.SUCCESS, event);
   } catch(error) {
