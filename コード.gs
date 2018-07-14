@@ -25,7 +25,6 @@ function createMessage(messageText) {
   if(MAINTENANCE)
     return 'メンテナンス中です。\nメンテナンス情報については、@nagahiro0918 (https://twitter.com/nagahiro0918)をご参照ください。';
   
-  var messageText = typeof errorMessage === 'undefined' ? '': errorMessage;
   // イースターエッグ
   if(messageText.indexOf('ぬるぽ') !== -1)
     return 'ｶﾞｯ';
@@ -36,15 +35,7 @@ function createMessage(messageText) {
   if(messageText.indexOf('ひかりあれ') !== -1)
     return 'インフラ勉強会にひかりあれ。';
 
-  // 本処理
-  outlines = spreadsheet.getSheetByName(SHEET.EVENT).getRange('A2:A11').getValues();
-  var message = '';
-  for(i = 0; i < outlines.length; i++) {
-    if(message.length != 0)
-      message += '\n\n';
-    message += outlines[i][0];
-  }
-  return message;
+  return;
 }
 
 /* フリープランの場合は使用不可
@@ -85,7 +76,7 @@ function doPost(e) {
   }
   
   try {
-    var postData = createPostData(event.replyToken, createMessage(event.message.text));
+    var postData = createPostData(event.replyToken, event);
     UrlFetchApp.fetch('https://api.line.me/v2/bot/message/reply', createOptions(postData));
 
     logToSheet(STATUS.SUCCESS, event);
@@ -97,63 +88,33 @@ function doPost(e) {
   }
 }
 
-function createPostData(replyToken, message) {
-  var postData = {
-    'replyToken' : replyToken,
-    'messages' : [{
-  "type": "template",
-  "altText": "this is a carousel template",
-  "template": {
-      "type": "carousel",
-      "columns": [
-          {
-            "title": "this is menu",
-            "text": "description",
-            "defaultAction": {
-                "type": "uri",
-                "label": "View detail",
-                "uri": "http://example.com/page/123"
-            },
-            "actions": [
-                {
-                    "type": "uri",
-                    "label": "View detail",
-                    "uri": "http://example.com/page/111"
-                }
-            ]
-          },
-          {
-            "title": "this is menu",
-            "text": "description",
-            "defaultAction": {
-                "type": "uri",
-                "label": "View detail",
-                "uri": "http://example.com/page/222"
-            },
-            "actions": [
-                {
-                    "type": "postback",
-                    "label": "Buy",
-                    "data": "action=buy&itemid=222"
-                },
-                {
-                    "type": "postback",
-                    "label": "Add to cart",
-                    "data": "action=add&itemid=222"
-                },
-                {
-                    "type": "uri",
-                    "label": "View detail",
-                    "uri": "http://example.com/page/222"
-                }
-            ]
-          }
-      ],
-      "imageAspectRatio": "rectangle",
-      "imageSize": "cover"
+function createPostData(replyToken, event) {
+  var message;
+  if(typeof event.message.text !== 'undefined')
+    message = createMessage(event.message.text);
+
+  var postData;
+  if(typeof message !== 'undefined') {
+    postData = {
+      'replyToken' : replyToken,
+      'messages' : [{
+        'type' : 'text',
+        'text' : message
+      }]
+    };
+  } else {
+    postData = {
+      'replyToken' : replyToken,
+      'messages' : [{
+        "type": "template",
+        "altText": "this is a carousel template",
+        "template": {
+          "type": "carousel",
+          "columns": createCarouselColumns()
+        }
+      }]
+    };
   }
-}]
-  };
   return postData;
 }
 
@@ -167,6 +128,36 @@ function createOptions(postData) {
     'payload' : JSON.stringify(postData)
   };
   return options;
+}
+
+function createCarouselColumns() {
+  eventDatas = spreadsheet.getSheetByName(SHEET.EVENT).getRange('A2:M11').getValues();
+
+  var carouselColumns = [];
+  eventDatas.forEach(function(eventData) {
+    var carouserlColumn = {
+      "title": omit(eventData[0], 40),
+      "text": omit((eventData[12] + '\n' + eventData[1] + 'さん'), 60),
+      "actions": [{
+        "type": "uri",
+        "label": "詳細",
+        "uri": eventData[2]
+      }]
+    };
+    carouselColumns.push(carouserlColumn);
+  });
+  return carouselColumns;
+}
+
+function omit(text, charLimit) {
+  return text.length <= charLimit ? text : text.substr(0, charLimit - 1) + '…';
+  
+}
+
+function test() {
+  eventDatas = spreadsheet.getSheetByName(SHEET.EVENT).getRange('A2:M11').getValues();
+  Logger.log(eventDatas[0][4]);
+  Logger.log(eventDatas[0][12]);
 }
 
 function logToSheet(status, eventLog, message) {
