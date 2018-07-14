@@ -14,8 +14,11 @@ var MAINTENANCE = false;
 var CHANNEL_ACCESS_TOKEN = spreadsheet.getSheetByName(SHEET.CONFIG).getRange('B4').getValue(); 
 //var USER_ID = spreadsheet.getSheetByName(SHEET.CONFIG).getRange('B5').getValue();  push通知の場合のみ使用
 
-var ERROR_MESSAGE = 'エラーが発生しました。\nしばらく時間をおいてもダメな場合は@nagahiro0918 (https://twitter.com/nagahiro0918)にご連絡をお願いします。';
-
+var MESSAGE = {
+  ERROR      : 'エラーが発生しました。\nしばらく時間をおいてもダメな場合は@nagahiro0918 (https://twitter.com/nagahiro0918)にご連絡をお願いします。',
+  MAINTENANCE: 'メンテナンス中です。\nメンテナンス情報については、@nagahiro0918 (https://twitter.com/nagahiro0918)をご参照ください。'
+}
+  
 // 関数定義
 function reloadRss() {
   spreadsheet.getSheetByName(SHEET.CONFIG).getRange('B2').setValue(new Date());
@@ -83,7 +86,7 @@ function doPost(e) {
   } catch(error) {
     logToSheet(STATUS.FAILED, event, error.message);
     // エラーが出た場合は、一応その旨を送信しようとしてみる
-    var postData = createPostData(event.replyToken, ERROR_MESSAGE);
+    var postData = createPostData(event.replyToken, MESSAGE.ERROR);
     UrlFetchApp.fetch('https://api.line.me/v2/bot/message/reply', createOptions(postData));
   }
 }
