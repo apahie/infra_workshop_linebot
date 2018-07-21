@@ -138,6 +138,8 @@ function createCarouselColumns() {
 
   var carouselColumns = [];
   eventDatas.forEach(function(eventData) {
+    if(eventData[0] === '')
+      return carouselColumns;
     var carouserlColumn = {
       "title": omit(eventData[0], 40),
       "text": omit((eventData[12] + '\n' + eventData[1] + 'さん'), 60),
