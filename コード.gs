@@ -86,8 +86,8 @@ function doPost(e) {
   } catch(error) {
     logToSheet(STATUS.FAILED, event, error.message);
     // エラーが出た場合は、一応その旨を送信しようとしてみる
-//    var postData = createPostData(event.replyToken, MESSAGE.ERROR);
-//    UrlFetchApp.fetch('https://api.line.me/v2/bot/message/reply', createOptions(postData));
+    var postData = createPostData(event.replyToken, MESSAGE.ERROR);
+    UrlFetchApp.fetch('https://api.line.me/v2/bot/message/reply', createOptions(postData));
   }
 }
 
