@@ -88,8 +88,8 @@ function doPost(e) {
     logToSheet(STATUS.SUCCESS, event);
   } catch(error) {
     logToSheet(STATUS.FAILED, event, error.message);
-    var errorMessageForMail = 'インフラ勉強会LINE Botでエラーが発生しました。\n' + error.message; // エラーログ記録
-    GmailApp.sendEmail(ERROR_MESSAGE_RECIPIENT, 'インフラ勉強会LINE Bot エラー通知', errorMessageForMail); // エラー発生通知
+    var errorMessageForMail = 'インフラ勉強会LINE Botでエラーが発生しました。\n' + new Date() + '\n' + error.message; // エラーログ記録
+    GmailApp.sendEmail(ERROR_MESSAGE_RECIPIENT, '【インフラ勉強会】LINE Bot エラー通知', errorMessageForMail); // エラー発生通知
 
     // エラーが出た場合は、一応その旨をユーザーに送信しようとしてみる
     var postData = createPostData(event.replyToken, MESSAGE.ERROR);
