@@ -14,7 +14,7 @@ var MAINTENANCE = false;
 var CHANNEL_ACCESS_TOKEN = spreadsheet.getSheetByName(SHEET.CONFIG).getRange('B4').getValue(); 
 //var USER_ID = spreadsheet.getSheetByName(SHEET.CONFIG).getRange('B5').getValue();  push通知の場合のみ使用、テスト用なので自分宛に送信
 var LINE_BOT_API_URI = 'https://api.line.me/v2/bot/message/reply';
-
+var ERROR_MESSAGE_RECIPIENT = spreadsheet.getSheetByName(SHEET.CONFIG).getRange('B6').getValue(); 
 
 
 var MESSAGE = {
@@ -88,7 +88,10 @@ function doPost(e) {
     logToSheet(STATUS.SUCCESS, event);
   } catch(error) {
     logToSheet(STATUS.FAILED, event, error.message);
-    // エラーが出た場合は、一応その旨を送信しようとしてみる
+    var errorMessageForMail = 'インフラ勉強会LINE Botでエラーが発生しました。\n' + error.message; // エラーログ記録
+    GmailApp.sendEmail(ERROR_MESSAGE_RECIPIENT, 'インフラ勉強会LINE Bot エラー通知', errorMessageForMail); // エラー発生通知
+
+    // エラーが出た場合は、一応その旨をユーザーに送信しようとしてみる
     var postData = createPostData(event.replyToken, MESSAGE.ERROR);
     UrlFetchApp.fetch(LINE_BOT_API_URI, createOptions(postData));
   }
