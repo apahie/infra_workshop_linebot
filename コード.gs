@@ -12,7 +12,7 @@ var STATUS = {
 var MAINTENANCE = false;
 
 var CHANNEL_ACCESS_TOKEN = spreadsheet.getSheetByName(SHEET.CONFIG).getRange('B4').getValue(); 
-//var USER_ID = spreadsheet.getSheetByName(SHEET.CONFIG).getRange('B5').getValue();  push通知の場合のみ使用
+//var USER_ID = spreadsheet.getSheetByName(SHEET.CONFIG).getRange('B5').getValue();  push通知の場合のみ使用、テスト用なので自分宛に送信
 var LINE_BOT_API_URI = 'https://api.line.me/v2/bot/message/reply';
 
 
