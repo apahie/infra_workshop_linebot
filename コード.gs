@@ -13,6 +13,7 @@ var MAINTENANCE = false;
 
 var CHANNEL_ACCESS_TOKEN = spreadsheet.getSheetByName(SHEET.CONFIG).getRange('B4').getValue(); 
 //var USER_ID = spreadsheet.getSheetByName(SHEET.CONFIG).getRange('B5').getValue();  push通知の場合のみ使用
+var LINE_BOT_API_URI = 'https://api.line.me/v2/bot/message/reply';
 
 var MESSAGE = {
   ERROR      : 'エラーが発生しました。\nしばらく時間をおいてもダメな場合は@nagahiro0918 (https://twitter.com/nagahiro0918)にご連絡をお願いします。',
@@ -80,14 +81,14 @@ function doPost(e) {
   
   try {
     var postData = createPostData(event.replyToken, event);
-    UrlFetchApp.fetch('https://api.line.me/v2/bot/message/reply', createOptions(postData));
+    UrlFetchApp.fetch(LINE_BOT_API_URI, createOptions(postData));
 
     logToSheet(STATUS.SUCCESS, event);
   } catch(error) {
     logToSheet(STATUS.FAILED, event, error.message);
     // エラーが出た場合は、一応その旨を送信しようとしてみる
     var postData = createPostData(event.replyToken, MESSAGE.ERROR);
-    UrlFetchApp.fetch('https://api.line.me/v2/bot/message/reply', createOptions(postData));
+    UrlFetchApp.fetch(LINE_BOT_API_URI, createOptions(postData));
   }
 }
 
