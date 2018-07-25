@@ -29,7 +29,7 @@ function reloadRss() {
 
 function createMessage(messageText) {
   if(MAINTENANCE)
-    return 'メンテナンス中です。\nメンテナンス情報については、@nagahiro0918 (https://twitter.com/nagahiro0918)をご参照ください。';
+    return MESSAGE.MAINTENANCE;
   
   // イースターエッグ
   if(messageText.indexOf('ぬるぽ') !== -1)
