@@ -1,8 +1,8 @@
 var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
 var SHEET = {
-  CONFIG: 'config',
-  EVENT : 'event_data',
-  LOG   : 'log'
+  CONFIG: spreadsheet.getSheetByName('config'),
+  EVENT : spreadsheet.getSheetByName('event_data'),
+  LOG   : spreadsheet.getSheetByName('log')
 };
 var STATUS = {
   SUCCESS: 'SUCCESS',
@@ -11,10 +11,10 @@ var STATUS = {
 
 var MAINTENANCE = false;
 
-var CHANNEL_ACCESS_TOKEN = spreadsheet.getSheetByName(SHEET.CONFIG).getRange('B4').getValue(); 
-//var USER_ID = spreadsheet.getSheetByName(SHEET.CONFIG).getRange('B5').getValue();  push通知の場合のみ使用、テスト用なので自分宛に送信
+var CHANNEL_ACCESS_TOKEN = SHEET.CONFIG.getRange('B4').getValue(); 
+//var USER_ID = SHEET.CONFIG.getRange('B5').getValue();  push通知の場合のみ使用、テスト用なので自分宛に送信
 var LINE_BOT_API_URI = 'https://api.line.me/v2/bot/message/reply';
-var ERROR_MESSAGE_RECIPIENT = spreadsheet.getSheetByName(SHEET.CONFIG).getRange('B6').getValue(); 
+var ERROR_MESSAGE_RECIPIENT = SHEET.CONFIG.getRange('B6').getValue(); 
 
 
 var MESSAGE = {
@@ -24,7 +24,7 @@ var MESSAGE = {
   
 // 関数定義
 function reloadRss() {
-  spreadsheet.getSheetByName(SHEET.CONFIG).getRange('B2').setValue(new Date());
+  SHEET.CONFIG.getRange('B2').setValue(new Date());
 };
 
 function createMessage(messageText) {
@@ -140,7 +140,7 @@ function createOptions(postData) {
 };
 
 function createCarouselColumns() {
-  eventDatas = spreadsheet.getSheetByName(SHEET.EVENT).getRange('A2:M11').getValues();
+  eventDatas = SHEET.EVENT.getRange('A2:M11').getValues();
 
   var carouselColumns = [];
   eventDatas.forEach(function(eventData) {
@@ -166,5 +166,5 @@ function omit(text, charLimit) {
 
 function logToSheet(status, eventLog, message) {
   var message = typeof message === 'undefined' ? '': message;
-  spreadsheet.getSheetByName(SHEET.LOG).appendRow([new Date(), status, eventLog, message]);
+  SHEET.LOG.appendRow([new Date(), status, eventLog, message]);
 };
