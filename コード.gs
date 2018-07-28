@@ -21,11 +21,61 @@ var MESSAGE = {
   ERROR      : 'エラーが発生しました。\nしばらく時間をおいてもダメな場合は@nagahiro0918 (https://twitter.com/nagahiro0918)にご連絡をお願いします。',
   MAINTENANCE: 'メンテナンス中です。\nメンテナンス情報については、@nagahiro0918 (https://twitter.com/nagahiro0918)をご参照ください。'
 };
-  
-// 関数定義
+
+// RSS取得用関数（トリガーで5分毎に実行）
 function reloadRss() {
   SHEET.CONFIG.getRange('B2').setValue(new Date());
 };
+
+// メイン処理（Botにメッセージが来た場合の処理）
+function doPost(e) {
+  var event = JSON.parse(e.postData.contents).events[0];
+
+  if(!needsResponse(event))
+    return;
+  
+  try {
+    var postData = createPostData(event.replyToken, event);
+    UrlFetchApp.fetch(LINE_BOT_API_URI, createOptions(postData));
+
+    logToSheet(STATUS.SUCCESS, event);
+  } catch(error) {
+    logToSheet(STATUS.FAILED, event, error.message); // エラーログ記録
+    var errorMessageForMail = 'インフラ勉強会LINE Botでエラーが発生しました。\n' + new Date() + '\n' + error.message;
+    GmailApp.sendEmail(ERROR_MESSAGE_RECIPIENT, '【インフラ勉強会】LINE Bot エラー通知', errorMessageForMail); // エラー発生通知
+
+    // エラーが出た場合は、一応その旨をユーザーに送信しようとしてみる
+    var postData = createPostData(event.replyToken, MESSAGE.ERROR);
+    UrlFetchApp.fetch(LINE_BOT_API_URI, createOptions(postData));
+  }
+};
+
+// イベントタイプによって、レスポンスが必要か判断する
+function needsResponse(event) {
+
+  if(event.type === 'message' || event.type === 'postback')
+    return true;
+
+  // 基本的に友だち追加、解除の場合を想定    
+  var status;
+  var message;
+  switch(event.type) {
+    case 'follow':
+      status = STATUS.SUCCESS;
+      message = '友だち追加';
+      break;
+    case 'unfollow':
+      status = STATUS.SUCCESS;
+      message = '友だち解除';
+      break;
+    default:
+      status = STATUS.FAILED;
+      message = '想定外のイベントタイプ';
+      break;
+  }
+  logToSheet(status, event, message);
+  return false;
+}
 
 function createMessage(messageText) {
   if(MAINTENANCE)
@@ -44,88 +94,33 @@ function createMessage(messageText) {
   return;
 };
 
-/* フリープランの場合は使用不可
-function pushMessage() {
-  var postData = {
-    'to': USER_ID,
-    'messages': [{
-      'type': 'text',
-      'text': createMessage()
-    }]
-  };
-  var response = UrlFetchApp.fetch('https://api.line.me/v2/bot/message/push', createOptions(postData));
-};
-*/
-
-function doPost(e) {
-  var event = JSON.parse(e.postData.contents).events[0];
-  // 基本的に友だち追加、解除の場合を想定
-  if(event.type !== 'message') {
-    var status;
-    var message;
-    switch(event.type) {
-      case 'follow':
-        status = STATUS.SUCCESS;
-        message = '友だち追加';
-        break;
-      case 'unfollow':
-        status = STATUS.SUCCESS;
-        message = '友だち解除';
-        break;
-      default:
-        status = STATUS.FAILED;
-        message = 'その他';
-        break;
-    }
-    logToSheet(status, event, message);
-    return;
-  }
-  
-  try {
-    var postData = createPostData(event.replyToken, event);
-    UrlFetchApp.fetch(LINE_BOT_API_URI, createOptions(postData));
-
-    logToSheet(STATUS.SUCCESS, event);
-  } catch(error) {
-    logToSheet(STATUS.FAILED, event, error.message); // エラーログ記録
-    var errorMessageForMail = 'インフラ勉強会LINE Botでエラーが発生しました。\n' + new Date() + '\n' + error.message;
-    GmailApp.sendEmail(ERROR_MESSAGE_RECIPIENT, '【インフラ勉強会】LINE Bot エラー通知', errorMessageForMail); // エラー発生通知
-
-    // エラーが出た場合は、一応その旨をユーザーに送信しようとしてみる
-    var postData = createPostData(event.replyToken, MESSAGE.ERROR);
-    UrlFetchApp.fetch(LINE_BOT_API_URI, createOptions(postData));
-  }
-};
-
 function createPostData(replyToken, event) {
   var message;
   if(typeof event.message.text !== 'undefined')
     message = createMessage(event.message.text);
 
-  var postData;
+  var postData = {'replyToken' : replyToken};
+  var messages = [];
   if(typeof message !== 'undefined') {
-    postData = {
-      'replyToken' : replyToken,
-      'messages' : [{
-        'type' : 'text',
-        'text' : message
-      }]
-    };
+    messages.push({
+      'type' : 'text',
+      'text' : message
+    });
   } else {
-    postData = {
-      'replyToken' : replyToken,
-      'messages' : [{
-        "type": "template",
-        "altText": "this is a carousel template",
-        "template": {
-          "type": "carousel",
-          "columns": createCarouselColumns()
-        }
-      }]
-    };
+    messages.push({
+      "type": "template",
+      "altText": "this is a carousel template",
+      "template": {
+        "type": "carousel",
+        "columns": createCarouselColumns()
+      }
+    });
   }
+  postData.messages = messages;
   return postData;
 };
+
+
 
 function createOptions(postData) {
   var options = {
@@ -137,6 +132,24 @@ function createOptions(postData) {
     'payload' : JSON.stringify(postData)
   };
   return options;
+};
+
+function arraysToObjects(arrays) {
+  var arrays = SHEET.EVENT.getRange('A1:M11').getValues();
+  var header = arrays[0].map(formatForHeader);
+  var objects = [];
+  for(var i = 1; i < arrays.length; i++) {
+    var object = {};
+    arrays[i].forEach(function(element, index) {
+      object[header[index]] = element;
+    });
+    objects.push(object);
+  };
+  return objects;
+};
+
+function formatForHeader(element) {
+  return element.toLowerCase().replace(/\s+/g, "_");
 };
 
 function createCarouselColumns() {
