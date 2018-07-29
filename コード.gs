@@ -52,47 +52,29 @@ function doPost(e) {
 
 // イベントタイプによって、レスポンスが必要か判断する
 function needsResponse(event) {
-
   if(event.type === 'message' || event.type === 'postback')
     return true;
 
-  // 基本的に友だち追加、解除の場合を想定    
+  // 基本的に友だち追加、解除の場合を想定
   var status;
-  var message;
+  var logMessage;
   switch(event.type) {
     case 'follow':
       status = STATUS.SUCCESS;
-      message = '友だち追加';
+      logMessage = '友だち追加';
       break;
     case 'unfollow':
       status = STATUS.SUCCESS;
-      message = '友だち解除';
+      logMessage = '友だち解除';
       break;
-    default:
+    default: // 想定外のイベントタイプだが、通常運用には問題ないため、エラーメールは送信しない
       status = STATUS.FAILED;
-      message = '想定外のイベントタイプ';
+      logMessage = '想定外のイベントタイプ';
       break;
   }
-  logToSheet(status, event, message);
+  logToSheet(status, event, logMessage);
   return false;
 }
-
-function createMessage(messageText) {
-  if(MAINTENANCE)
-    return MESSAGE.MAINTENANCE;
-  
-  // イースターエッグ
-  if(messageText.indexOf('ぬるぽ') !== -1)
-    return 'ｶﾞｯ';
-  if(messageText.indexOf('禊') !== -1)
-    return "( っ'-')╮ =͟͟͞͞💩";
-  if(messageText.indexOf('IE') === 0)
-    return 'イエ' + Array(messageText.split('E').length).join('ー') + '！！';
-  if(messageText.indexOf('ひかりあれ') !== -1)
-    return 'インフラ勉強会にひかりあれ。';
-
-  return;
-};
 
 function createPostData(replyToken, event) {
   var message;
@@ -120,7 +102,22 @@ function createPostData(replyToken, event) {
   return postData;
 };
 
+function createMessage(messageText) {
+  if(MAINTENANCE)
+    return MESSAGE.MAINTENANCE;
+  
+  // イースターエッグ
+  if(messageText.indexOf('ぬるぽ') !== -1)
+    return 'ｶﾞｯ';
+  if(messageText.indexOf('禊') !== -1)
+    return "( っ'-')╮ =͟͟͞͞💩";
+  if(messageText.indexOf('IE') === 0)
+    return 'イエ' + Array(messageText.split('E').length).join('ー') + '！！';
+  if(messageText.indexOf('ひかりあれ') !== -1)
+    return 'インフラ勉強会にひかりあれ。';
 
+  return;
+};
 
 function createOptions(postData) {
   var options = {
@@ -134,9 +131,10 @@ function createOptions(postData) {
   return options;
 };
 
-function arraysToObjects(arrays) {
-  var arrays = SHEET.EVENT.getRange('A1:M11').getValues();
-  var header = arrays[0].map(formatForHeader);
+function arraysToObjects(arrays, header) {
+  if(typeof header === 'undefined')
+    header = arrays[0].map(formatForHeader);
+
   var objects = [];
   for(var i = 1; i < arrays.length; i++) {
     var object = {};
@@ -148,6 +146,7 @@ function arraysToObjects(arrays) {
   return objects;
 };
 
+// ヘッダーの文字を小文字にして、スペースがある場合は'_'に置換（できればキャメルケースにしたい）
 function formatForHeader(element) {
   return element.toLowerCase().replace(/\s+/g, "_");
 };
@@ -177,7 +176,7 @@ function omit(text, charLimit) {
   return text.length <= charLimit ? text : text.substr(0, charLimit - 1) + '…';
 };
 
-function logToSheet(status, eventLog, message) {
-  var message = typeof message === 'undefined' ? '': message;
-  SHEET.LOG.appendRow([new Date(), status, eventLog, message]);
+function logToSheet(status, eventLog, logMessage) {
+  var logMessage = typeof message === 'undefined' ? '': logMessage;
+  SHEET.LOG.appendRow([new Date(), status, eventLog, logMessage]);
 };
