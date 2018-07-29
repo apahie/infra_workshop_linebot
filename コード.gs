@@ -122,7 +122,7 @@ function createCarouselColumns(todayOnlyFlg) {
   var carouselColumns = eventDatas.map(function(eventData) {
     return {
       "title": omit(eventData.title, 40),
-      "text": omit((eventData.date + '\n' + eventData.author + 'さん'), 60),
+      "text": omit((eventData.date_and_time + '\n' + eventData.author + 'さん'), 60),
       "actions": [{
         "type": "uri",
         "label": "詳細",
