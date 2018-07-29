@@ -93,7 +93,7 @@ function createResponseContent(messageText) {
   if(messageText.indexOf('ひかりあれ') !== -1)
     return 'インフラ勉強会にひかりあれ。';
   
-  if(messageText === '今日の予定')
+  if(messageText === '今日のイベント')
     return createCarouselColumns(true);
   
   // 通常の直近データを返す
