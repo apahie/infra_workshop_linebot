@@ -43,7 +43,7 @@ function doPost(e) {
     logToSheet(STATUS.FAILED, event, error.message); // エラーログ記録
     if(!MAINTENANCE) { // メンテナンス中はアラートメールを飛ばさない
       var errorMessageForMail = 'インフラ勉強会LINE Botでエラーが発生しました。\n' + new Date() + '\n' + error.message;
-      GmailApp.sendEmail(ERROR_MESSAGE_RECIPIENT, '【インフラ勉強会】LINE Bot エラー通知', errorMessageForMail); // エラー発生通知
+      GmailApp.sendEmail(ERROR_MESSAGE_RECIPIENT, spreadsheet.getName() + ' エラー通知', errorMessageForMail); // エラー発生通知
     }
 
     // エラーが出た場合は、一応その旨をユーザーに送信しようとしてみる
@@ -78,10 +78,9 @@ function needsResponse(event) {
   return false;
 }
 
+// ポストデータの作成
 function createPostData(replyToken, event) {
-  var message;
-  if(typeof event.message.text !== 'undefined')
-    message = createMessage(event.message.text);
+  var response = createResponse(event.message.text);
 
   var postData = {'replyToken' : replyToken};
   var messages = [];
@@ -104,7 +103,7 @@ function createPostData(replyToken, event) {
   return postData;
 };
 
-function createMessage(messageText) {
+function createResponse(messageText) {
   if(MAINTENANCE)
     return MESSAGE.MAINTENANCE;
   
@@ -148,7 +147,8 @@ function arraysToObjects(arrays, header) {
   return objects;
 };
 
-// ヘッダーの文字を小文字にして、スペースがある場合は'_'に置換（できればキャメルケースにしたい）
+// ヘッダーの文字を小文字にして、スペースがある場合は'_'に置換
+// できればキャメルケースにしたいが、手間かかりそうなのでとりあえずスネークケース
 function formatForHeader(element) {
   return element.toLowerCase().replace(/\s+/g, "_");
 };
