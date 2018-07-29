@@ -102,7 +102,7 @@ function createResponseContent(messageText) {
 
 // カルーセルデータの作成（ただしイベントデータがない場合はテキストで返す）
 function createCarouselColumns(todayOnlyFlg) {
-  var eventDataArrays = SHEET.EVENT.getRange('A1:M11').getValues();
+  var eventDataArrays = SHEET.EVENT.getRange('A1:N11').getValues();
   var eventDatas = arraysToObjects(eventDataArrays.slice(1), eventDataArrays[0]);
   // todayOnlyFlgがtrueの場合、データが空白ではない、かつ、当日のデータ
   // todayOnlyFlgがfalseの場合、データが空白ではないデータ
