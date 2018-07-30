@@ -33,23 +33,17 @@ function doPost(e) {
   var event = JSON.parse(e.postData.contents).events[0];
 
   if(!needsResponse(event.type)) {
-    var status;
-    var logMessage;
     switch(eventType) {
       case 'follow':
-        status = STATUS.SUCCESS;
-        logMessage = '友だち追加';
+        logToSheet(STATUS.SUCCESS, event, '友だち追加');
         break;
       case 'unfollow':
-        status = STATUS.SUCCESS;
-        logMessage = '友だち解除';
+        logToSheet(STATUS.SUCCESS, event, '友だち解除');
         break;
       default: // 想定外のイベントタイプだが、通常運用には問題ないため、エラーメールは送信しない
-        status = STATUS.FAILED;
-        logMessage = '想定外のイベントタイプ';
+        logToSheet(STATUS.FAILED, event, '想定外のイベントタイプ');
         break;
     }
-    logToSheet(status, event, logMessage);
     return;
   }
   
