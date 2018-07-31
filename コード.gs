@@ -33,23 +33,17 @@ function doPost(e) {
   var event = JSON.parse(e.postData.contents).events[0];
 
   if(!needsResponse(event.type)) {
-    var status;
-    var logMessage;
-    switch(eventType) {
+    switch(event.type) {
       case 'follow':
-        status = STATUS.SUCCESS;
-        logMessage = '友だち追加';
+        logToSheet(STATUS.SUCCESS, event, '友だち追加');
         break;
       case 'unfollow':
-        status = STATUS.SUCCESS;
-        logMessage = '友だち解除';
+        logToSheet(STATUS.SUCCESS, event, '友だち解除');
         break;
       default: // 想定外のイベントタイプだが、通常運用には問題ないため、エラーメールは送信しない
-        status = STATUS.FAILED;
-        logMessage = '想定外のイベントタイプ';
+        logToSheet(STATUS.FAILED, event, '想定外のイベントタイプ');
         break;
     }
-    logToSheet(status, event, logMessage);
     return;
   }
   
@@ -82,7 +76,8 @@ function needsResponse(eventType) {
 function createResponseContent(messageText) {
   if(MAINTENANCE)
     return MESSAGE.MAINTENANCE;
-  
+
+  var messageText = typeof messageText === 'undefined' ? '': messageText;
   // イースターエッグ
   if(messageText.indexOf('ぬるぽ') !== -1)
     return 'ｶﾞｯ';
@@ -93,7 +88,7 @@ function createResponseContent(messageText) {
   if(messageText.indexOf('ひかりあれ') !== -1)
     return 'インフラ勉強会にひかりあれ。';
   
-  if(messageText === '今日の予定')
+  if(messageText === '今日のイベント')
     return createCarouselColumns(true);
   
   // 通常の直近データを返す
@@ -102,7 +97,7 @@ function createResponseContent(messageText) {
 
 // カルーセルデータの作成（ただしイベントデータがない場合はテキストで返す）
 function createCarouselColumns(todayOnlyFlg) {
-  var eventDataArrays = SHEET.EVENT.getRange('A1:M11').getValues();
+  var eventDataArrays = SHEET.EVENT.getRange('A1:N11').getValues();
   var eventDatas = arraysToObjects(eventDataArrays.slice(1), eventDataArrays[0]);
   // todayOnlyFlgがtrueの場合、データが空白ではない、かつ、当日のデータ
   // todayOnlyFlgがfalseの場合、データが空白ではないデータ
@@ -122,7 +117,7 @@ function createCarouselColumns(todayOnlyFlg) {
   var carouselColumns = eventDatas.map(function(eventData) {
     return {
       "title": omit(eventData.title, 40),
-      "text": omit((eventData.date + '\n' + eventData.author + 'さん'), 60),
+      "text": omit((eventData.date_and_time + '\n' + eventData.author + 'さん'), 60),
       "actions": [{
         "type": "uri",
         "label": "詳細",
@@ -136,26 +131,26 @@ function createCarouselColumns(todayOnlyFlg) {
 // ポストデータの作成
 function createPostData(replyToken, content) {
   var postData = {'replyToken' : replyToken};
-  var messages = [];
+  var message;
   switch(typeof content) {
     case 'string':
-      messages.push({
+      message = {
         'type' : 'text',
         'text' : content
-      });
+      };
       break;
     default:
-      messages.push({
+      message = {
         "type": "template",
         "altText": "this is a carousel template",
         "template": {
           "type": "carousel",
           "columns": content
         }
-      });
+      };
       break;
   }
-  postData.messages = messages;
+  postData.messages = [messages];
   return postData;
 };
 
