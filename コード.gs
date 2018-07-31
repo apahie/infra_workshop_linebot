@@ -150,7 +150,7 @@ function createPostData(replyToken, content) {
       };
       break;
   }
-  postData.messages = [messages];
+  postData.messages = [message];
   return postData;
 };
 
