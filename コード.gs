@@ -33,7 +33,7 @@ function doPost(e) {
   var event = JSON.parse(e.postData.contents).events[0];
 
   if(!needsResponse(event.type)) {
-    switch(eventType) {
+    switch(event.type) {
       case 'follow':
         logToSheet(STATUS.SUCCESS, event, '友だち追加');
         break;
