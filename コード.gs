@@ -76,7 +76,8 @@ function needsResponse(eventType) {
 function createResponseContent(messageText) {
   if(MAINTENANCE)
     return MESSAGE.MAINTENANCE;
-  
+
+  var messageText = typeof messageText === 'undefined' ? '': messageText;
   // イースターエッグ
   if(messageText.indexOf('ぬるぽ') !== -1)
     return 'ｶﾞｯ';
