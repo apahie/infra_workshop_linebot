@@ -131,26 +131,26 @@ function createCarouselColumns(todayOnlyFlg) {
 // ポストデータの作成
 function createPostData(replyToken, content) {
   var postData = {'replyToken' : replyToken};
-  var messages = [];
+  var message;
   switch(typeof content) {
     case 'string':
-      messages.push({
+      message = {
         'type' : 'text',
         'text' : content
-      });
+      };
       break;
     default:
-      messages.push({
+      message = {
         "type": "template",
         "altText": "this is a carousel template",
         "template": {
           "type": "carousel",
           "columns": content
         }
-      });
+      };
       break;
   }
-  postData.messages = messages;
+  postData.messages = [messages];
   return postData;
 };
 
