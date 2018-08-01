@@ -1,8 +1,9 @@
 var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
 var SHEET = {
-  CONFIG: spreadsheet.getSheetByName('config'),
-  EVENT : spreadsheet.getSheetByName('event_data'),
-  LOG   : spreadsheet.getSheetByName('log')
+  CONFIG  : spreadsheet.getSheetByName('config'),
+  EVENT   : spreadsheet.getSheetByName('event_data'),
+  BOOKMARK: spreadsheet.getSheetByName('bookmark'),
+  LOG     : spreadsheet.getSheetByName('log')
 };
 
 var STATUS = {
@@ -31,8 +32,7 @@ function reloadRss() {
 // メイン処理（Botにメッセージが来た場合の処理）
 function doPost(e) {
   var event = JSON.parse(e.postData.contents).events[0];
-
-  if(!needsResponse(event.type)) {
+  
     switch(event.type) {
       case 'follow':
         logToSheet(STATUS.SUCCESS, event, '友だち追加');
@@ -40,12 +40,15 @@ function doPost(e) {
       case 'unfollow':
         logToSheet(STATUS.SUCCESS, event, '友だち解除');
         break;
+      case 'message':
+        break;
+      case 'postback':
+        break;
+        
       default: // 想定外のイベントタイプだが、通常運用には問題ないため、エラーメールは送信しない
         logToSheet(STATUS.FAILED, event, '想定外のイベントタイプ');
         break;
     }
-    return;
-  }
   
   try {
     var responseContent = createResponseContent(event.message.text);
@@ -65,6 +68,13 @@ function doPost(e) {
     UrlFetchApp.fetch(LINE_BOT_API_URI, createOptions(postData));
   }
 };
+
+// ポストバック時の処理を考える
+function processForPostback() {
+  var bookmarkDataArrays = SHEET.BOOKMARK.getRange('A1:B11').getValues();
+  var bookmarkDatas = arraysToObjects(bookmarkData.slice(1), bookmarkDataArrays[0]);
+  
+}
 
 // イベントタイプによって、レスポンスが必要か判断する
 function needsResponse(eventType) {
@@ -122,6 +132,14 @@ function createCarouselColumns(todayOnlyFlg) {
         "type": "uri",
         "label": "詳細",
         "uri": eventData.url
+      }, {
+        'type': 'postback',
+        'label': 'ブックマーク追加',
+        'data': 'add:' +  eventData.url
+      }, {
+        'type': 'postback',
+        'label': 'ブックマーク解除',
+        'data': 'cancel:' +  eventData.url
       }]
     };
   });
@@ -150,7 +168,7 @@ function createPostData(replyToken, content) {
       };
       break;
   }
-  postData.messages = [messages];
+  postData.messages = [message];
   return postData;
 };
 
